@@ -1,0 +1,141 @@
+/****
+mysql -u root -p'n0@ccess4U'
+use blink_dob;
+CREATE TABLE z_blink_dob_archive.sdp_6d_raw_subs_payment_202506_11_31 LIKE blink_dob.sdp_6d_raw_subs_payment;
+INSERT INTO z_blink_dob_archive.sdp_6d_raw_subs_payment_202506_11_31 SELECT * FROM blink_dob.sdp_6d_raw_subs_payment where (`d_date` between '2025-06-11' and '2025-06-31 23:59:59');
+***/
+
+
+118.67.213.169
+==============
+php table_archive.php <source_db> <target_db> <main_table> <date_formate> <from_date> <to_date> <table_suffix>
+
+[blink_dob]
+php table_archive.php blink_dob z_blink_dob_archive sdp_6d_callback "d_date" "2025-07-01" "2025-07-02 23:59:59" "202507_01_02"
+
+[robi]
+php table_archive.php robi_sm z_robi_sm_archive sdp_send_sms_log "d_date" "2025-07-07" "2025-07-08 23:59:59" "202507_07_08"
+
+[gp_global]
+php table_archive.php gp_global z_gp_global_archive renews "created_at" "2025-07-01" "2025-07-02 23:59:59" "202507_01_02"
+
+At a time all command run
+-------------------------
+php table_archive.php blink_dob z_blink_dob_archive sdp_6d_callback "d_date" "2025-07-01" "2025-07-02 23:59:59" "202507_01_02" && \
+php table_archive.php robi_sm z_robi_sm_archive sdp_send_sms_log "d_date" "2025-07-07" "2025-07-08 23:59:59" "202507_07_08" && \
+php table_archive.php gp_global z_gp_global_archive renews "created_at" "2025-07-01" "2025-07-02 23:59:59" "202507_01_02"
+
+
+118.67.213.177
+==============
+cd /var/www/wwwroot/operation/db-transfer && php db_exports.php charge_log_202502
+
+Multiple line execution(Multi-line with proper backslash (\ এর পরে কোনো স্পেস নেই))
+-----------------------
+cd /var/www/wwwroot/operation/db-transfer && \
+php db_exports.php z_robi_sm_archive sdp_send_sms_log_202507_07_08 && \
+php db_exports.php z_gp_global_archive renews_202507_01_02 && \
+php db_exports.php z_blink_dob_archive sdp_6d_callback_202507_01_02
+
+
+Get table information and make the table where destination
+-------------------------------------------------------
+=> show CREATE TABLE `sdp_6d_raw_subs_payment`
+
+Data export from database
+--------------------------
+[sed -i '1d' remove first line]
+
+=> mysqldump --single-transaction --routines  --triggers --skip-extended-insert --skip-comments --complete-insert --no-tablespaces -u root -p'351f0*57034e1a025#' -h 192.168.20.14 z_blink_dob_archive sdp_6d_raw_subs_payment_202506_12 > /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sql && sed -i '1d' /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sql
+=> gzip /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sql  [for compress]
+
+Day after day same table data export
+-------------------------------------
+[sed -i -e '1d' -e '/CREATE TABLE/,/);/d' -e '/DROP TABLE IF EXISTS `table_name`;/d'  remove first line, create table ]
+
+=> mysqldump --single-transaction --routines  --triggers --skip-extended-insert --skip-comments --complete-insert --no-tablespaces -u root -p'351f0*57034e1a025#' -h 192.168.20.14 z_blink_dob_archive sdp_6d_raw_subs_payment_202506_12 > /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sql && sed -i -e '1d' -e '/CREATE TABLE/,/);/d' -e '/DROP TABLE IF EXISTS `sdp_6d_raw_subs_payment_202506_12`;/d' /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sql
+=> gzip /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sql  [for compress]
+[download file then]
+
+Open PowerShell with adminstrator then goto D:\xampp8\mysql\bin
+----------------------------------------------------------------
+(Get-Content "G:\z-db\blink_dob\sdp_6d_raw_subs_payment_202506_12.sql") `
+| ForEach-Object { $_ -replace "sdp_6d_raw_subs_payment_202506_12", "sdp_6d_raw_subs_payment_202506" } `
+| Set-Content "G:\z-db\blink_dob\sdp_final_12.sql"
+
+=======]
+
+Database data import
+====================
+mysql -u root -p database_name < "G:\B2M\z-db\gp_global\sdp_final_12.sql"
+
+DROP TABLE IF EXISTS table_name;
+
+MySQL Table Maintenance
+=======================
+ANALYZE TABLE `table_name`;
+OPTIMIZE TABLE `table_name`;
+REPAIR TABLE `table_name`;
+
+সব টেবিল একসাথে optimize/analyze/check 
+=================================
+mysqlcheck -u root -p --optimize --all-databases
+mysqlcheck -u root -p --analyze --all-databases
+mysqlcheck -u root -p --check --all-databases
+
+Robi_sm
+=========
+php table_archive.php robi_sm z_robi_sm_archive sdp_send_sms_log "d_date" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php robi_sm z_robi_sm_archive sdp_broadcast_content "date_added" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php robi_sm z_robi_sm_archive sdp_sequential_broadcast "date_added" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10"
+
+
+
+Blink_dob
+=========
+php table_archive.php blink_dob z_blink_dob_archive sdp_6d_raw_subs_payment "d_date" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php blink_dob z_blink_dob_archive sdp_6d_raw_callback "d_date" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php blink_dob z_blink_dob_archive sdp_6d_callback "d_date" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php blink_dob z_blink_dob_archive charge_log "d_date" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php blink_dob z_blink_dob_archive sdp_6d_raw_consent "d_date" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10"
+
+gp_global
+=========
+php table_archive.php gp_global z_gp_global_archive renew_logs "created_at" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php gp_global z_gp_global_archive consents "created_at" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php gp_global z_gp_global_archive renews "created_at" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php gp_global z_gp_global_archive charge_log "created_at" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10" && \
+php table_archive.php gp_global z_gp_global_archive partner_payments "created_at" "2025-07-01" "2025-07-10 23:59:59" "202507_01_10"
+
+cd /var/www/wwwroot/operation/db-transfer && \
+php db_exports.php z_robi_sm_archive sdp_send_sms_log_202507_07_12 && \
+php db_exports.php z_robi_sm_archive sdp_broadcast_content_202507_07_12 && \
+php db_exports.php z_robi_sm_archive sdp_sequential_broadcast_202507_07_12
+
+adminer(know table size)
+=======================
+SELECT 
+  table_name AS 'Table Name',
+  ROUND(((data_length + index_length) / 1024 / 1024), 2) AS 'Size (MB)'  
+FROM 
+  information_schema.TABLES
+WHERE 
+  table_schema = 'আপনার_ডাটাবেসের_নাম'      
+ORDER BY 
+  (data_length + index_length) DESC;
+
+All database size
+=================
+SELECT 
+  table_schema AS 'Database Name',
+  ROUND(SUM(data_length + index_length) / 1024 / 1024 / 1024, 3) AS 'Total Size (GB)'
+FROM 
+  information_schema.tables
+GROUP BY 
+  table_schema
+ORDER BY 
+  SUM(data_length + index_length) DESC;
+======================================
+DROP DATABASE your_database_name;
+DROP TABLE IF EXISTS customers;
+
