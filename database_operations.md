@@ -1,8 +1,8 @@
 # ডাটাবেস আর্কাইভিং এবং ম্যানেজমেন্ট গাইড
 
 ## সার্ভার তথ্য
-- **সার্ভার ১**: 118.67.213.169 (আর্কাইভিং সার্ভার)
-- **সার্ভার ২**: 118.67.213.177 (এক্সপোর্ট সার্ভার)
+- **সার্ভার ১**: xxx.xxx.xxx.xxx (আর্কাইভিং সার্ভার)
+- **সার্ভার ২**: xxx.xxx.xxx.xxx (এক্সপোর্ট সার্ভার)
 
 ## ডাটাবেস কানেকশন
 
@@ -124,7 +124,7 @@ mysqldump --single-transaction --routines --triggers --skip-extended-insert --sk
 gzip /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sql
 ```
 
-## Windows PowerShell দিয়ে ফাইল প্রসেসিং
+## Windows PowerShell (Run as Administrator) দিয়ে ফাইল প্রসেসিং
 
 ### টেবিল ভিতরে নাম পরিবর্তন (PowerShell)
 ```powershell
@@ -145,7 +145,7 @@ mysql -u root -p -v database_name < "G:\\z-db\\blink_dob\\sdp_final_12.sql"
 
 ------------- or
 
-D:\xampp8\mysql\bin\mysql.exe -u root -p blink_dob < "G:\z-db\blink_dob\sdp_6d_raw_subs_payment_202506_11.sql"
+D:\xampp8\mysql\bin\mysql.exe -u root -p -v blink_dob < "G:\z-db\blink_dob\sdp_6d_raw_subs_payment_202506_11.sql"
 ```
 
 ### টেবিল ডিলিট করা
