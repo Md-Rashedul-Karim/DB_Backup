@@ -63,7 +63,8 @@ echo "📊 Table: $table\n";
 echo "📊 Host: $host\n";
 
 // ----------[ FILE PATHS ]----------
-$sqlFile = $outputDir . $database . '_' . $table . '.sql';
+// $sqlFile = $outputDir . $database . '_' . $table . '.sql';
+$sqlFile = $outputDir . $table . '.sql';
 $gzipFile = $sqlFile . '.gz';
 
 echo "📁 Output file: $gzipFile\n";
