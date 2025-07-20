@@ -42,8 +42,9 @@ php table_archive.php gp_global z_gp_global_archive renews "created_at" "2025-07
 ```bash
 php table_chunk_archive_id.php <source_db> <target_db> <main_table> <id_column_name> <date_column_name> <from_date> <to_date> <table_suffix> [chunk_size]
 
-php table_chunk_archive_id.php blink_dob z_blink_dob_archive charge_log log_id d_date "2025-07-01" "2025-07-10 23:59:59" 01_10 10000
+php table_chunk_archive_id.php blink_dob z_blink_dob_archive charge_log log_id d_date "2025-07-01" "2025-07-10 23:59:59" 202507_01_10 10000
 ```
+
 
 ## PHP টেবিল আর্কাইভ চাঙ্ক, আইডি ধরে সাথে লগ ফাইল দেখা কমান্ড
 
@@ -56,18 +57,24 @@ log_id \
 d_date \
 "2025-07-01" \
 "2025-07-10 23:59:59" \
-01_03 \
+202507_01_10 \
 1000 > chunk_01_03.log 2>&1 &
 
 -----------or
 
-php table_chunk_archive_id.php blink_dob z_blink_dob_archive charge_log log_id d_date "2025-07-01" "2025-07-10 23:59:59" 01_03 10000 > chunk_01_03.log 2>&1 &
+php table_chunk_archive_id.php blink_dob z_blink_dob_archive charge_log log_id d_date "2025-07-01" "2025-07-10 23:59:59" 202507_01_10 10000 > chunk_01_03.log 2>&1 &
 
 এখানে:
  chunk_01_03.log → আউটপুট যাবে এই ফাইলে
  2>&1 → error আউটপুটও একই ফাইলে
  & → এটি background এ যাবে
 
+```
+### চাঙ্ক টেবিল একসাথে সব কমান্ড রান করা
+```bash
+php table_chunk_archive_id.php blink_dob z_blink_dob_archive sdp_6d_raw_subs_payment id d_date "2025-07-01" "2025-07-02 23:59:59" 202507_01_02 10000 && \
+php table_chunk_archive_id.php blink_dob z_blink_dob_archive sdp_6d_raw_subs_payment id d_date "2025-07-03" "2025-07-04 23:59:59" 202507_03_04 10000 && \
+php table_chunk_archive_id.php blink_dob z_blink_dob_archive sdp_6d_raw_subs_payment id d_date "2025-07-09" "2025-07-10 23:59:59" 202507_09_10 10000
 ```
 ## একই সার্ভার ডাটাবেস আর্কাইভ
 ``` bash
@@ -135,7 +142,7 @@ gzip /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sq
 
 ## ডাটাবেস ইমপোর্ট
 
-### স্থানীয় ডাটাবেসে ইমপোর্ট
+### লোকাল পিসি ডাটাবেসে ডাটা ইনসার্ট
 ```bash
 mysql -u root -p -v database_name < "G:\B2M\z-db\gp_global\sdp_final_12.sql"
 
@@ -146,8 +153,23 @@ mysql -u root -p -v database_name < "G:\\z-db\\blink_dob\\sdp_final_12.sql"
 ------------- or
 
 D:\xampp8\mysql\bin\mysql.exe -u root -p -v blink_dob < "G:\z-db\blink_dob\sdp_6d_raw_subs_payment_202506_11.sql"
+
+```
+### লোকাল পিসি মাল্টিপল ডাটা ইনসার্ট
+``` bash
+D:\xampp8\mysql\bin\mysql.exe -u root -v blink_dob < "G:\z-db\blink_dob\sdp_6d_callback_202507_02.sql" && ^
+D:\xampp8\mysql\bin\mysql.exe -u root -v blink_dob < "G:\z-db\blink_dob\sdp_6d_callback_202507_04.sql" && ^
+D:\xampp8\mysql\bin\mysql.exe -u root -v blink_dob < "G:\z-db\blink_dob\sdp_6d_callback_202507_10.sql"
+
 ```
 
+### লোকাল পিসি মাল্টিপল ডাটাবেসে ডাটা ইনসার্ট
+```bash
+start "" cmd /c "D:\xampp8\mysql\bin\mysql.exe -u root  -v blink_dob < G:\z-db\blink_dob\sdp_6d_raw_consent_202507_10.sql 
+start "" cmd /c "D:\xampp8\mysql\bin\mysql.exe -u root  -v gp_global < G:\z-db\gp_global\sdp_6d_callback_202507_04.sql"  
+start "" cmd /c "D:\xampp8\mysql\bin\mysql.exe -u root  -v robi_sm < G:\z-db\robi_sm\sdp_6d_callback_202507_06.sql"
+
+```
 ### টেবিল ডিলিট করা
 ```sql
 DROP TABLE IF EXISTS table_name;
