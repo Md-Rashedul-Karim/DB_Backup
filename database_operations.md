@@ -155,6 +155,24 @@ mysql -u root -p -v database_name < "G:\\z-db\\blink_dob\\sdp_final_12.sql"
 D:\xampp8\mysql\bin\mysql.exe -u root -p -v blink_dob < "G:\z-db\blink_dob\sdp_6d_raw_subs_payment_202506_11.sql"
 
 ```
+
+### Duplicate ID হলে আর লোকাল PC data insert না হলে (modify_sql_duplicate_id.php, modify_sql_ignor_id.php)
+
+<p> 
+  [ Open modify_sql_ignor_id.php file and change the input, output file path and table name  and run the command prompt again ]
+</p>
+
+#### Open CMD command prompt
+
+```
+cd D:\xampp8\htdocs 
+mkdir modify_sql
+cd modify_sql 
+php modify_sql_ignor_id.php
+
+```
+
+
 ### লোকাল পিসি মাল্টিপল ডাটা ইনসার্ট
 ``` bash
 D:\xampp8\mysql\bin\mysql.exe -u root -v blink_dob < "G:\z-db\blink_dob\sdp_6d_callback_202507_02.sql" && ^
