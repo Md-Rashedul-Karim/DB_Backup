@@ -210,7 +210,7 @@ php table_chunk_delete_date_id_range.php z_robi_sm_archive sdp_broadcast_content
 
 * এখানে
 
-  * `2025 854` → আইডি রেঞ্জ (শুরু ও শেষ)
+  * `205 854` → আইডি রেঞ্জ (শুরু ও শেষ)
   * `100` → প্রতি চাঙ্কে কতগুলো রো ডিলিট হবে
 
 
