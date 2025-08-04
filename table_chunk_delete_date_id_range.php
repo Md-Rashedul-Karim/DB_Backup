@@ -31,7 +31,7 @@ if ($conn->connect_error) {
     die("❌ Connection failed: " . $conn->connect_error . PHP_EOL);
 }
 $conn->set_charset('utf8mb4');
-$conn->autocommit(false);
+$conn->autocommit(true); // ✅ Autocommit চালু করে দাও
 
 try {
     // ✅ মোট কতগুলো রো ডিলিট হবে সেটা দেখানো হবে
@@ -66,7 +66,7 @@ try {
             break; // ✅ সব ডিলিট হয়ে গেছে
         }
 
-        $conn->commit();
+        // $conn->commit();
         $totalDeleted += $deleted;
 
         $percent = $totalRows > 0 ? round(($totalDeleted / $totalRows) * 100, 2) : 100;
@@ -75,12 +75,23 @@ try {
 
     echo "🗑 Total Deleted: $totalDeleted rows.\n";
 
-    // ✅ টেবিল অপ্টিমাইজ
-    echo "🛠 Optimizing `$sourceDb`.`$mainTable` ... ";
-    if (!$conn->query("OPTIMIZE TABLE `$sourceDb`.`$mainTable`")) {
-        throw new Exception("❌ Error optimizing table: " . $conn->error);
-    }
-    echo "✅ Optimization Done!\n";
+    // ✅ টেবিল Optimizing REPAIR ANALYZE করা হচ্ছে
+    // echo "\n 🛠 REPAIR `$sourceDb`.`$mainTable` ... \n";
+    // if (!$conn->query("REPAIR TABLE `$sourceDb`.`$mainTable`")) {
+    //     throw new Exception("❌ Error optimizing table: " . $conn->error);
+    // }
+
+    // echo "\n 🛠 Optimizing `$sourceDb`.`$mainTable` ... \n";
+    // if (!$conn->query("OPTIMIZE TABLE `$sourceDb`.`$mainTable`")) {
+    //     throw new Exception("❌ Error optimizing table: " . $conn->error);
+    // }  
+
+    // echo "\n 🛠 ANALYZE `$sourceDb`.`$mainTable` ... \n";
+    // if (!$conn->query("ANALYZE TABLE `$sourceDb`.`$mainTable`")) {
+    //     throw new Exception("❌ Error optimizing table: " . $conn->error);
+    // }
+
+    // echo "\n ✅ REPAIR Done!\n ✅ Optimization Done!\n ✅ ANALYZE Done!\n";
 
 } catch (Exception $e) {
     $conn->rollback();

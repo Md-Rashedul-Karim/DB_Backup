@@ -97,6 +97,45 @@ php db_exports.php z_gp_global_archive renews_202507_01_02 && \
 php db_exports.php z_blink_dob_archive sdp_6d_callback_202507_01_02
 ```
 
+
+## 🔥 টেবিল ডেটা ডিলিট, রিপেয়ার, অপ্টিমাইজ, অ্যানালাইস হবে
+
+### টেবিল ডেটা ডিলিট ডেট ধরে 
+
+```
+php table_chunk_delete_date_range.php <source_db> <main_table> <id_column_name> <date_column> <from_date> <to_date> [chunk_size]
+
+
+php table_chunk_delete_date_range.php robi_sm sdp_broadcast_content id date_added "2025-07-27" "2025-07-27 23:59:59" 10000
+```
+### টেবিল ডেটা ডিলিট Date ও ID ধরে 
+
+```
+php table_chunk_delete.php <source_db> <main_table> <id_column> <date_column> <from_date> <to_date> <start_id> <end_id> [chunk_size]
+
+php table_chunk_delete_date_id_range.php z_robi_sm_archive sdp_broadcast_content_202507 id date_added "2025-07-28" "2025-07-28 23:59:59" 205 854 100
+
+```
+
+* এখানে
+
+  * `205 854` → আইডি রেঞ্জ (শুরু ও শেষ)
+  * `100` → প্রতি চাঙ্কে কতগুলো রো ডিলিট হবে
+
+
+## ডাটাবেসের টেবিল অপ্টিমাইজ
+
+```
+ php table_optimize.php <source_db> <main_table>
+
+ php table_optimize.php blink_dob sdp_6d_callback
+
+```
+
+
+
+
+
 ### টেবিল স্ট্রাকচার দেখা ও নতুন টেবিল ক্রিয়েট করা 
 ```sql
 SHOW CREATE TABLE `sdp_6d_raw_subs_payment`;
@@ -188,30 +227,6 @@ start "" cmd /c "D:\xampp8\mysql\bin\mysql.exe -u root  -v gp_global < G:\z-db\g
 start "" cmd /c "D:\xampp8\mysql\bin\mysql.exe -u root  -v robi_sm < G:\z-db\robi_sm\sdp_6d_callback_202507_06.sql"
 
 ```
-
-## 🔥 টেবিল ডেটা ডিলিট, রিপেয়ার, অপ্টিমাইজ, অ্যানালাইস হবে
-
-### টেবিল ডেটা ডিলিট ডেট ধরে 
-
-```
-php table_chunk_delete_date_range.php <source_db> <main_table> <id_column_name> <date_column> <from_date> <to_date> [chunk_size]
-
-
-php table_chunk_delete_date_range.php robi_sm sdp_broadcast_content id date_added "2025-07-27" "2025-07-27 23:59:59" 10000
-```
-### টেবিল ডেটা ডিলিট Date ও ID ধরে 
-
-```
-php table_chunk_delete.php <source_db> <main_table> <id_column> <date_column> <from_date> <to_date> <start_id> <end_id> [chunk_size]
-
-php table_chunk_delete_date_id_range.php z_robi_sm_archive sdp_broadcast_content_202507 id date_added "2025-07-28" "2025-07-28 23:59:59" 205 854 100
-
-```
-
-* এখানে
-
-  * `205 854` → আইডি রেঞ্জ (শুরু ও শেষ)
-  * `100` → প্রতি চাঙ্কে কতগুলো রো ডিলিট হবে
 
 
 ## টেবিল ডিলিট করা
