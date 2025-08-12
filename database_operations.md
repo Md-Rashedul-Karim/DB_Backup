@@ -20,6 +20,9 @@ LIKE blink_dob.sdp_6d_raw_subs_payment;
 INSERT INTO z_blink_dob_archive.sdp_6d_raw_subs_payment_202506_11_31 
 SELECT * FROM blink_dob.sdp_6d_raw_subs_payment 
 WHERE (`d_date` between '2025-06-11' and '2025-06-31 23:59:59');
+
+CREATE TABLE z_gp_global_archive.renews_null LIKE gp_global.renews;
+INSERT INTO z_gp_global_archive.renews_null SELECT * FROM gp_global.renews where created_at is null;
 ```
 
 ## PHP টেবিল আর্কাইভ স্ক্রিপ্ট দিনের পর দিন
@@ -82,7 +85,8 @@ mysqldump -u <username> -p'<password>' -v <db name> <table name> > <path>/<table
 
 mysqldump -u root -p'n0@ccess4U' -v z_robi_sm_archive sdp_broadcast_content_202504 > sdp_broadcast_content_202504.sql
 ```
-## ডাটা এক্সপোর্ট (118.67.213.177 সার্ভার)
+## ডাটা এক্সপোর্ট (118.67.213.177 সার্ভার) ভিন্ন সার্ভারে ডাটাবেস এ ইমপোর্ট
+[ <b>Note</b> যে সার্ভার ডাটা এক্সপোর্ট করবো সে সার্ভার গিয়ে নিচের কম্যান্ড গুলো এক্সেকিউটি করবো। ]
 
 ### একক এক্সপোর্ট
 ```bash
@@ -123,9 +127,18 @@ php table_chunk_delete_date_id_range.php z_robi_sm_archive sdp_broadcast_content
   * `100` → প্রতি চাঙ্কে কতগুলো রো ডিলিট হবে
 
 
-## ডাটাবেসের টেবিল অপ্টিমাইজ
+## ডাটাবেসের টেবিল অপ্টিমাইজ (optimize)
 
+```mysql
+  mysql -u root -p'n0@ccess4U'
+  show databases;
+  use blink_dob;
+  optimize table sdp_6d_callback;
 ```
+
+## ডাটাবেসের টেবিল অপ্টিমাইজ (optimize) একটি স্ক্রিপ্টের মাধ্যমে
+
+```bash
  php table_optimize.php <source_db> <main_table>
 
  php table_optimize.php blink_dob sdp_6d_callback
