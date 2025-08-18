@@ -200,56 +200,111 @@ gzip /var/www/wwwroot/operation/db-transfer/sdp_6d_raw_subs_payment_202506_12.sq
 
 <?php
 // Folder path
-$folderPath = "G:/z-db/gp_global/202507"; //change this to your folder path
+$folderPath = "G:/z-db/blink_dob/202508";
 
 // Replacement patterns
 $replacements = [
     [
-        "old" => "charge_logs_202507_23_24", //change this to your old table name
-        "new" => "charge_logs_202507",  //change this to your new table name
-        "output" => "G:/z-db/gp_global/charge_logs_202507_24.sql" // change this to your output file path
+        "old" => "sdp_6d_callback_202508_07_08",
+        "new" => "sdp_6d_callback_202508",
+        "output" => "G:/z-db/blink_dob/sdp_6d_callback_202508_08.sql"
     ],
-    [
-        "old" => "charge_logs_202507_25_26",
-        "new" => "charge_logs_202507",
-        "output" => "G:/z-db/gp_global/charge_logs_202507_26.sql"
-    ]
+	 [
+        "old" => "sdp_6d_callback_202508_09_10",
+        "new" => "sdp_6d_callback_202508",
+        "output" => "G:/z-db/blink_dob/sdp_6d_callback_202508_10.sql"
+    ],
+ 
 ];
 
-// Loop through replacements
+// Buffer size (4MB chunks)
+$chunkSize = 4 * 1024 * 1024;
+
 foreach ($replacements as $item) {
-    // Find matching file
     $files = glob($folderPath . "/*" . $item['old'] . "*.sql");
 
     if (!empty($files)) {
-        $file = $files[0]; // First matching file
+        $file = $files[0];
         echo "Processing: {$file}\n";
 
-        // Read file content
-        $content = file_get_contents($file);
+        $input = fopen($file, 'rb');
+        if (!$input) {
+            die("Cannot open input file: {$file}");
+        }
 
-        // Replace old text with new
-        $content = str_replace($item['old'], $item['new'], $content);
+        $output = fopen($item['output'], 'wb');
+        if (!$output) {
+            fclose($input);
+            die("Cannot open output file: {$item['output']}");
+        }
 
-        // Save to new file
-        file_put_contents($item['output'], $content);
+        $overlap = strlen($item['old']) - 1; // Keep last few bytes from previous chunk
+        $buffer = '';
 
-        echo "Saved to: {$item['output']}\n";
+        while (!feof($input)) {
+            // Read next chunk
+            $chunk = fread($input, $chunkSize);
+            if ($chunk === false) {
+                echo "Error reading file.\n";
+                break;
+            }
+
+            // Prepend leftover from last chunk
+            $chunk = $buffer . $chunk;
+
+            // Save last bytes for next loop
+            $buffer = substr($chunk, -$overlap);
+
+            // Remove overlap portion before replacing
+            $processPart = substr($chunk, 0, strlen($chunk) - $overlap);
+
+            // Replace text
+            $processPart = str_replace($item['old'], $item['new'], $processPart);
+
+            // Write processed part
+            fwrite($output, $processPart);
+        }
+
+        // Process remaining buffer
+        if ($buffer !== '') {
+            $buffer = str_replace($item['old'], $item['new'], $buffer);
+            fwrite($output, $buffer);
+        }
+
+        fclose($input);
+        fclose($output);
+
+        echo "✅ Saved to: {$item['output']}\n";
     } else {
-        echo "No file found for: {$item['old']}\n";
+        echo "❌ No file found for: {$item['old']}\n";
     }
 }
+
 ?>
 
 ```
 
-### মাল্টি টেবিল ভিতরে নাম পরিবর্তন (PowerShell)
+### মাল্টি টেবিল ভিতরে নাম পরিবর্তন করে
+
 * Press Windows + R
 * Type `cmd` and press Enter
 * cd F:\xampp-8\htdocs\scripts
 
 ```bash
- php replace_tables.php
+ php replace_tables.php 
+
+```
+### মাল্টি টেবিল modify_id
+
+```bash
+ php modify_id.php 
+
+```
+
+### মাল্টি টেবিল import
+
+```bash
+ php import_sql.php 
 
 ```
 
