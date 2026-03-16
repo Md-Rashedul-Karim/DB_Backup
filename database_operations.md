@@ -425,6 +425,28 @@ DROP TABLE IF EXISTS table_name;
 
 ```
 
+## আজকের দিন থেকে আগের দিনের ও মাসের সব ডাটা আর্কাইভ করা 
+
+```php
+  php blinkdob_auto_data_archive.php
+```
+
+## গত দিনের ডেটা আর্কাইভ করা
+
+```php
+  php daily_archive.php
+
+```
+
+## একই মাসের ডেটা আর্কাইভ করা
+```php
+  php same_month_archive.php <source_db> <target_db> <main_table> <date_column> <from_date> <to_date>
+
+  php same_month_archive.php robi_sm z_robi_sm_archive sdp_send_sms_log d_date '2026-01-21' '2026-01-31 23:59:59'
+
+```
+
+
 ## ডাটাবেস সাইজ পরিমাপ
 
 ### টেবিলের সাইজ দেখা (Adminer)
