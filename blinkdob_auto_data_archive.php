@@ -33,7 +33,7 @@ try {
     die("❌ DB connection failed: " . $e->getMessage() . "\n");
 }
 
-// ১ দিন আগের ডাটা আর্কাইভ হবে
+// 30 দিন আগের ডাটা আর্কাইভ হবে
 $archiveBefore = date("Y-m-d 23:59:59", strtotime("-30 days"));
 
 echo "Archive Data Before: $archiveBefore\n";
@@ -112,7 +112,7 @@ foreach ($tablesToArchive as $table => $config) {
                 $deleted = $conn->affected_rows;
 
                 $conn->commit();
-                echo "✔️  Batch: Inserted $inserted | Deleted $deleted\n";                
+                echo "✔️  $archiveTable: Inserted $inserted | $table: Deleted $deleted\n";   
 
             } catch (Exception $e) {
                 $conn->rollback();

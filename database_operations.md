@@ -546,3 +546,130 @@ DROP TABLE IF EXISTS customers;
 - বড় টেবিল এর জন্য চাঙ্কিং ব্যবহার করুন
 - আর্কাইভ করার পর প্রোডাকশন টেবিল থেকে পুরাতন ডেটা মুছে ফেলুন
 - নিয়মিত আর্কাইভ টেবিল অপটিমাইজ করুন
+
+
+
+
+# ***   Use crontab in linux server for database archive ***
+
+
+
+---
+
+## 🔧 Linux / Ubuntu-তে Cronjob Edit করার নিয়ম
+
+### ১. Terminal খুলে এই কমান্ড দাও:
+
+```bash
+crontab -e
+```
+
+👉 এটা তোমার user-এর cronjob file open করবে।
+
+---
+
+### ২. ভিতরে গেলে এমন কিছু দেখতে পারো:
+
+```bash
+* * * * * /usr/bin/php /var/www/html/script.php
+```
+
+👉 এখানে তুমি edit করতে পারো:
+
+* সময় পরিবর্তন
+* command পরিবর্তন
+* নতুন job add
+
+---
+
+### ৩. Cronjob Format বুঝো
+
+```bash
+* * * * * command
+| | | | |
+| | | | └── Day of week (0 - 7) (Sunday = 0 or 7)
+| | | └──── Month (1 - 12)
+| | └────── Day of month (1 - 31)
+| └──────── Hour (0 - 23)
+└────────── Minute (0 - 59)
+```
+
+---
+
+### ✅ Example:
+
+#### প্রতি 5 মিনিটে run হবে:
+
+```bash
+*/5 * * * * /usr/bin/php /var/www/html/script.php
+```
+
+#### প্রতিদিন রাত 2 টায়:
+
+```bash
+0 2 * * * /usr/bin/php /var/www/html/script.php
+```
+
+---
+
+### ৪. Save & Exit
+
+
+---
+
+## 🧪 Check করতে চাইলে:
+
+```bash
+crontab -l
+```
+
+---
+
+## ⚠️ Important Tips
+
+* PHP path ঠিক আছে কিনা check করো:
+
+```bash
+which php
+```
+
+👉 সাধারণত output হয়:
+
+```bash
+/usr/bin/php
+```
+
+## ⚠️ Important (খুব জরুরি)
+
+👉 File permission ঠিক আছে কিনা:
+
+```bash
+chmod +x /home/centos/blinkdob_auto_data_archive.php
+--- or 
+chmod 755 /home/centos/blinkdob_auto_data_archive.php
+```
+### check
+
+```bash
+cd /home/centos
+ll
+```
+
+### run করো:
+
+```bash
+cd /home/centos && /usr/bin/php blinkdob_auto_data_archive.php
+```
+
+---
+
+### 👉 Final Cronjob:
+
+```bash
+*/5 * * * * cd /home/centos && /usr/bin/php blinkdob_auto_data_archive.php >> /home/centos/archive.log 2>&1
+
+
+```
+
+
+
