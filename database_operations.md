@@ -663,13 +663,38 @@ cd /home/centos && /usr/bin/php blinkdob_auto_data_archive.php
 
 ---
 
-### 👉 Final Cronjob:
+### 👉 Final Cronjob :
 
 ```bash
 */5 * * * * cd /home/centos && /usr/bin/php blinkdob_auto_data_archive.php >> /home/centos/archive.log 2>&1
-
+--or
+30 2 * * * cd /home/centos && /usr/bin/php blinkdob_auto_data_archive.php >> /home/centos/archive.log 2>&1
 
 ```
 
+##  *** DB to BD data archive
+
+### copy the file and past /root directory where you run the server
+
+<p> like your source DB is 192.168.20.14 and you target DB is 192.168.10.23 so your script past in target DB 192.168.10.23 server </p>
+
+```bash
+  php robi_db_to_db_archive.php
+
+```
+### For cronjob
+
+#### copy the file and past /home/centos directory then run bellow the command
+
+```bash
+  cd /home/centos && /usr/bin/php robi_db_to_db_archive.php
+```
+
+## Fix month wayes data archive (2026_01, 2026_02, 2026_03 ... )
+
+```bash
+php month_wayes_db_to_db_archive
+
+```
 
 
