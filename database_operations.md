@@ -85,12 +85,15 @@ mysqldump -u <username> -p'<password>' -v <db name> <table name> > <path>/<table
 
 mysqldump -u root -p'n0@ccess4U' -v z_robi_sm_archive sdp_broadcast_content_202504 > sdp_broadcast_content_202504.sql
 ```
+
 ## ডাটা এক্সপোর্ট (118.67.213.177 সার্ভার) ভিন্ন সার্ভারে ডাটাবেস এ ইমপোর্ট
-[ <b>Note</b> যে সার্ভার ডাটা এক্সপোর্ট করবো সে সার্ভার গিয়ে নিচের কম্যান্ড গুলো এক্সেকিউটি করবো। ]
+[ <b>Note</b> যে সার্ভার ডাটা এক্সপোর্ট করবো সে সার্ভার গিয়ে নিচের কম্যান্ড গুলো এক্সেকিউটি করবো আর script ভিতরে গিয়ে  <b> $outputDir = '/var/www/wwwroot/operation/db-transfer/';</b>  এই পথে গিয়ে চেঞ্জ করে দিবো (<b> $outputDir = '/home/centos/auto_archive/'; </b>) শেষে স্ল্যাশ " / " নিশ্চিত করুন এবং প্রয়োজনীও ফোল্ডার ক্রিয়েট করে দিবো। ]
 
 ### একক এক্সপোর্ট
 ```bash
 cd /var/www/wwwroot/operation/db-transfer && php db_exports.php charge_log_202502
+--or change 
+cd /home/centos/auto_archive && php db_exports.php charge_log_202502
 ```
 
 ### মাল্টি-লাইন এক্সপোর্ট
@@ -99,8 +102,16 @@ cd /var/www/wwwroot/operation/db-transfer && \
 php db_exports.php z_robi_sm_archive sdp_send_sms_log_202507_07_08 && \
 php db_exports.php z_gp_global_archive renews_202507_01_02 && \
 php db_exports.php z_blink_dob_archive sdp_6d_callback_202507_01_02
+
 ```
 
+### Full database export
+
+```bash
+cd /var/www/wwwroot/operation/db-transfer && php full_db_exports.php database_name
+--or change 
+cd /home/centos/auto_archive && php full_db_exports.php database_name
+```
 
 ## 🔥 টেবিল ডেটা ডিলিট, রিপেয়ার, অপ্টিমাইজ, অ্যানালাইস হবে
 
@@ -696,5 +707,269 @@ cd /home/centos && /usr/bin/php blinkdob_auto_data_archive.php
 php month_wayes_db_to_db_archive
 
 ```
+
+## <b> *** Every Month Database Tables Download With Auto Cronjob run</b>
+
+তুমি যেটা চাও:
+👉 প্রতি মাসের **শেষ দিন (28/29/30/31)**
+👉 সময়: **23:59 (রাত ১১:৫৯)**
+
+---
+
+## ✅ Best Solution (Production Ready)
+
+### ✔️ Cron Job
+
+```bash
+59 23 28-31 * * [ "$(date +\%d -d tomorrow)" = "01" ] && /usr/bin/php /home/centos/full_db_exports.php database_name >> /home/centos/archive.log 2>&1
+```
+
+---
+
+## 🔍 কিভাবে কাজ করে (Bangla Explanation)
+
+```bash
+59 23 28-31 * *
+```
+
+👉 মানে:
+
+* 28, 29, 30, 31 তারিখে run হবে
+* সময়: 23:59
+
+---
+
+# 🔥 Very Important
+
+### ✔️ Disk space check
+
+```bash
+df -h
+```
+
+### 🧠 Magic Condition
+
+```bash
+[ "$(date +\%d -d tomorrow)" = "01" ]
+```
+
+👉 এর মানে:
+
+* আগামীকাল যদি ১ তারিখ হয় → আজ মাসের শেষ দিন ✅
+
+---
+
+### ✔️ Example
+
+| আজকের তারিখ        | কাল    | Run হবে? |
+| ------------------ | ------ | -------- |
+| 28 Feb             | 01 Mar | ✅        |
+| 30 Apr             | 01 May | ✅        |
+| 31 Jan             | 01 Feb | ✅        |
+| 29 Feb (leap year) | 01 Mar | ✅        |
+
+---
+
+## Test  cronjob after 5 minutes
+
+```bash
+*/5 * * * * /bin/bash -c '/usr/bin/php /home/centos/full_db_exports.php database_name >> /home/centos/archive_$(date +\%Y-\%m).log 2>&1'
+```
+
+## 🚀 Full Clean Version
+
+```bash
+59 23 28-31 * * [ "$(date +\%d -d tomorrow)" = "01" ] && /usr/bin/php /home/centos/full_db_exports.php database_name >> /home/centos/archive_$(date +\%Y-\%m).log 2>&1
+--or
+59 23 28-31 * * [ "$(date +\%d -d tomorrow)" = "01" ] && /usr/bin/php /home/centos/full_db_exports.php database_name >> /home/centos/archive.log 2>&1
+--or
+59 23 28-31 * * [ "$(date +\%d -d tomorrow)" = "01" ] && /bin/bash -c '/usr/bin/php /home/centos/full_db_exports.php database_name >> /home/centos/archive_$(date +\%Y-\%m).log 2>&1'
+```
+
+## ⚠️ Why /bin/bash -c needed?
+
+### ⚠️ Important Check cron default shell
+
+👉 কারণ:
+
+* Cron এ $(date ...) expand নাও হতে পারে properly
+* কারণ cron minimal shell use করে (sh), full bash feature না
+* cron default shell = /bin/sh
+* $(...) সবসময় properly কাজ করে না
+* bash দিলে 100% safe
+ 
+## ✅ 1. Cron default shell check করার সবচেয়ে সহজ উপায়
+
+```bash
+crontab -l
+```
+
+👉 Output-এর উপরে যদি এটা থাকে:
+
+```bash
+SHELL=/bin/bash
+```
+
+👉 তাহলে cron bash use করছে
+👉 না থাকলে 👉 default = `/bin/sh`
+
+---
+
+## ✅ 2. নিশ্চিতভাবে check (system level)
+
+```bash
+grep SHELL /etc/crontab
+```
+
+👉 Example output:
+
+```bash
+SHELL=/bin/sh
+```
+
+👉 মানে system cron shell = `/bin/sh`
+
+---
+
+## ✅ 3. Runtime check (100% confirm method) 🔥
+
+একটা test cron job add করো:
+
+```bash
+* * * * * echo $SHELL > /home/centos/cron_shell.txt
+```
+
+👉 ১ মিনিট wait করো, তারপর:
+
+```bash
+cat /home/centos/cron_shell.txt
+```
+
+👉 Output:
+
+* `/bin/sh` → default shell
+* `/bin/bash` → bash use হচ্ছে
+
+---
+
+## ✅ 4. Current user shell check (important but NOT cron shell)
+
+```bash
+echo $SHELL
+```
+
+👉 এটা তোমার login shell দেখাবে (cron shell না!)
+
+---
+
+## ⚠️ Important Concept (Bangla)
+
+| Type        | Command             | Meaning              |
+| ----------- | ------------------- | -------------------- |
+| Login shell | `echo $SHELL`       | user shell           |
+| Cron shell  | `/bin/sh` (default) | cron execution shell |
+
+👉 অনেকেই এখানে ভুল করে ❌
+
+---
+
+## 🚀 5. Cron shell change করার best way
+
+## ✔️ Option 1 (Recommended)
+
+crontab-এর top এ add করো:
+
+```bash
+SHELL=/bin/bash
+```
+
+---
+
+## ✔️ Full Example
+
+```bash
+SHELL=/bin/bash
+
+59 23 28-31 * * [ "$(date +\%d -d tomorrow)" = "01" ] && /usr/bin/php /home/centos/full_db_exports.php database_name >> /home/centos/archive_$(date +\%Y-\%m).log 2>&1
+```
+
+---
+
+# 🔥 Pro Tips
+
+✔ Always assume cron = `/bin/sh`
+✔ Complex command হলে → bash use করো
+✔ Production-এ safe approach:
+
+```bash
+/bin/bash -c "your command"
+```
+
+
+
+
+
+👉 সুবিধা:
+
+* শুধু মাসের শেষ দিনে run করবে
+* আলাদা monthly log file
+
+---
+
+## ⚠️ Important Notes
+
+### 1. `%` escape করা MUST
+
+Cron-এ `%` special character, তাই:
+
+```
+% → \%
+```
+
+---
+
+### 2. Server timezone check
+
+```bash
+date
+```
+
+👉 যদি UTC হয় → mismatch হবে
+👉 fix:
+
+```bash
+timedatectl set-timezone Asia/Dhaka
+```
+
+---
+
+### 3. Manual test
+
+```bash
+date -d tomorrow
+```
+
+---
+
+## ❌ Alternative (Not Recommended)
+
+```bash
+59 23 31 * *
+```
+
+👉 Problem:
+
+* সব মাসে 31 নাই ❌
+* Feb miss করবে ❌
+
+---
+
+## 🧠 Final Summary
+
+* Cron-এ “last day” নেই
+* workaround = tomorrow = 1 check
+* production best practice = this method
+
+---
 
 
