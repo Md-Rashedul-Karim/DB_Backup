@@ -1,15 +1,14 @@
 <?php
 date_default_timezone_set('Asia/Dhaka');
 
-// ----------[ CONFIGURATION ]----------
-$host      = 'localhost';
-$user      = 'root';
-$password  = '968d413ffe75bf4a';
-$outputDir = '/var/www/wwwroot/operation/db-transfer/DB-Backup/'; // শেষে স্ল্যাশ নিশ্চিত করুন
+// run :  php full_db_exports.php database_name
 
-if (php_sapi_name() === 'cli') {
-    $outputDir = isset($argv[2]) ? $argv[2] : $outputDir;
-}
+
+// ----------[ CONFIGURATION ]----------
+$host      = '192.168.20.14';
+$user      = 'root';
+$password  = '351f0*57034e1a025#';
+$outputDir = '/home/centos/auto_archive/'; // শেষে স্ল্যাশ নিশ্চিত করুন
 
 // ----------[ GET DATABASE NAME ]----------
 $database = null;
@@ -21,7 +20,7 @@ if (php_sapi_name() === 'cli') {
 }
 
 if (! $database) {
-    exit("❌ Database name required.\nUsage: php db_backup.php database_name\n");
+    exit("❌ Database name required.\nUsage: php full_db_exports.php database_name\n");
 }
 
 // Security check for database name

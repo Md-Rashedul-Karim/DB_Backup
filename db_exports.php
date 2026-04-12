@@ -1,16 +1,18 @@
 <?php
 date_default_timezone_set('Asia/Dhaka');
+
+// run : php db_exports.php database_name table_name
+
 // ----------[ CONFIGURATION ]----------
 $host = '192.168.20.14';
 $user = 'root';
 $password = '351f0*57034e1a025#';
-$outputDir = '/var/www/wwwroot/operation/db-transfer/';
+$outputDir = '/home/centos/auto_archive/';
 
 // ----------[ GET DATABASE AND TABLE NAME ]----------
 $database = null;
 $table = null;
 
-// CLI arguments: php db_backup.php database_name table_name
 if (php_sapi_name() === 'cli') {
     if (isset($argv[1]) && isset($argv[2])) {
         $database = $argv[1];
