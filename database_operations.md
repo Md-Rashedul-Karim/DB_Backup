@@ -971,5 +971,28 @@ date -d tomorrow
 * production best practice = this method
 
 ---
+## দুই* মাস আগে ডাটা এক্সপোর্ট, ডিলিট সাথে ইমেইল পাঠানো। 
 
+```bash
+php /home/centos/bdg_b2mwap_delete_month_db_exports.php
+```
+## দুই* মাস আগে ডাটা এক্সপোর্ট, ডিলিট সাথে ইমেইল পাঠানো। 
+
+```bash
+php /home/centos/bdgamers_month_db_exports.php
+
+```
+## cronjob command line.
+
+আজ রাত 23:50 চেক করে দেখবে আগামী কাল ২ তারিখ কি না।  যদি ২ তারিখ হয় তাহলে এই স্ক্রিপ্ট রান করবে।
+```bash
+50 23 28-31 * * [ "$(date +\%d -d tomorrow)" = "02" ] && /bin/bash -c '/usr/bin/php /home/centos/bdgamers_month_db_exports.php >> /home/centos/bdg_archive_$(date +\%Y-\%m).log 2>&1'
+```
+
+আজ রাত 22:55 চেক করে দেখবে আগামী কাল ৩ তারিখ কি না।  যদি ৩ তারিখ হয় তাহলে এই স্ক্রিপ্ট রান করবে।
+
+```bash
+
+55 22 28-31 * * [ "$(date +\%d -d tomorrow)" = "03" ] && /bin/bash -c '/usr/bin/php /home/centos/bdg_b2mwap_delete_month_db_exports.php >> /home/centos/bdg_b2mwap_archive_$(date +\%Y-\%m).log 2>&1'
+```
 
