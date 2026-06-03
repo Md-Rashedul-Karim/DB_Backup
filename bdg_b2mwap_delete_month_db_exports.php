@@ -1,17 +1,19 @@
 <?php
 
-// Run command as: php /home/centos/bdg_b2mwap_delete_month_db_exports.php
+// Run command as: php /home/centos/robi_delete_month_db_exports.php
 
 // =====================================================================
 // REQUIRE
 // =====================================================================
-require 'PHPMailer/PHPMailer.php';
-require 'PHPMailer/SMTP.php';
-require 'PHPMailer/Exception.php';
+// ✅ PHPMailer-এর জন্য অবশ্যই Exception ফাইলটি সবার আগে লোড করতে হবে
+require __DIR__ . '/PHPMailer/Exception.php';
+require __DIR__ . '/PHPMailer/PHPMailer.php';
+require __DIR__ . '/PHPMailer/SMTP.php';
 
+use PHPMailer\PHPMailer\Exception as MailException;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception as MailException;
+
 
 date_default_timezone_set('Asia/Dhaka');
 set_time_limit(0);
@@ -29,10 +31,10 @@ ini_set('max_execution_time', 0); // 0 = unlimited
 $host           = 'localhost';
 $user           = 'root';
 $password       = '968d413ffe75bf4a';
-$database       = 'z_bdgamers_club_archive';
+$database       = 'z_robi_sm_archive';
 $baseOutputDir  = '/home/centos/'; // শেষে স্ল্যাশ নিশ্চিত করুন
 
-$mysqldump      = '/usr/bin/mysqldump';
+$mysqldump      = '/usr/bin/mysqldump'; // বা পুরো পাথ দিন: /usr/bin/mysqldump
 $gzipBin        = '/bin/gzip';
 
 
@@ -61,14 +63,15 @@ $emailCc = [
 // ];
 
 // =====================================================================
-// TARGET MONTH (2 MONTH AGO)
+// TARGET Day
 // =====================================================================
 
 // Example:
 // Today = 2026-05-01
-// Target = 2026_03
+
 // $tableSuffix = date("Y-m-d 23:59:59", strtotime("-1 days"));
-$tableSuffix = date('Y_m', strtotime('-2 month'));
+
+$tableSuffix = $database . '_' . date('Y_m', strtotime('-1 month'));
 
 echo "====================================================\n";
 echo "🚀 EXPORT + DELETE PROCESS STARTED\n";
@@ -113,15 +116,26 @@ function writeLog($message)
 function sendStatusEmail(string $subject, string $content, array $toList = [], array $ccList = []): void
 // function sendStatusEmail(string $subject, string $content, array $toList, array $ccList = [], array $bccList = []): void
 {
-    $mail = new PHPMailer(true);
+    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
     try {
         $mail->isSMTP();
+        $mail->SMTPDebug  = 0; // সমস্যা বুঝতে এখানে 2 দিতে পারেন
         $mail->Host       = MAIL_HOST;
         $mail->SMTPAuth   = true;
         $mail->Username   = MAIL_USERNAME;
         $mail->Password   = MAIL_PASSWORD;
-        $mail->SMTPSecure = MAIL_ENCRYPTION;
+        // ✅ আধুনিক PHPMailer-এ ৪৬৫ পোর্টের জন্য ENCRYPTION_SMTPS ব্যবহার করা ভালো
+        $mail->SMTPSecure = (MAIL_PORT == 465) ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = MAIL_PORT;
+
+        // ✅ FIX: SSL verify কিছু shared host-এ fail করে — disable করুন প্রয়োজনে
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true,
+            ],
+        ];
 
         $mail->setFrom(MAIL_FROM_ADDRESS, MAIL_FROM_NAME);
 
@@ -152,8 +166,8 @@ function sendStatusEmail(string $subject, string $content, array $toList = [], a
         echo "📧 Report email sent successfully.\n";
         writeLog("Email sent: $subject");
 
-    } catch (MailException $e) {
-        $err = "❌ Email failed: {$mail->ErrorInfo}";
+    } catch (\Exception $e) {
+        $err = "❌ Email failed: " . $e->getMessage();
         echo $err . "\n";
         writeLog($err);
     }
@@ -196,13 +210,16 @@ try {
 // GET TARGET TABLES
 // ======================================================
 $tables = [];
-$result = $mysqli->query("SHOW TABLES LIKE '%\\_$tableSuffix'");
+// টেবিল নাম চেক করার সময় ওয়াইল্ডকার্ড চেক করুন
+$searchPattern = "%_" . $tableSuffix;
+$result = $mysqli->query("SHOW TABLES LIKE " . "'" . $mysqli->real_escape_string($searchPattern) . "'");
+
 while ($row = $result->fetch_array()) {
     $tables[] = $row[0];
 }
 
 if (empty($tables)) {
-    $msg = "No archive tables found for suffix: $tableSuffix";
+    $msg = "No archive tables found for pattern: $searchPattern in database: $database";
     writeLog($msg);
     sendStatusEmail("DB Export Alert: No Tables Found", $msg);
     $mysqli->close();
@@ -240,22 +257,24 @@ foreach ($tables as $table) {
     // ৩. টেবিল স্ট্যাটাস চেক (Row Count & Max Value of PK)
     $stats = $mysqli->query("SELECT COUNT(*) as total, MAX(`$primaryKey`) as max_val FROM `$table`")->fetch_assoc();
     $totalRows = (int)$stats['total'];
-    $maxVal    = $stats['max_val'] ?? 0;
+    $maxId     = (int)($stats['max_val'] ?? 0);
 
     $exportSuccess = false;
 
     // --- মোড সিলেকশন ---
-    if ($totalRows > $bigTableThreshold) {
+    // যদি ID ইন্টিজার না হয় বা অনেক গ্যাপ থাকে, mysqldump-ই ভালো। 
+    // শুধুমাত্র মেমোরি ইস্যু এড়াতে বিগ ডাটা মোড ব্যবহার করুন।
+    if ($totalRows > $bigTableThreshold && is_numeric($maxId)) {
         // ==========================================
         // BIG DATA MODE (Chunking using Dynamic PK)
         // ==========================================
         writeLog("⚠️ Big Table Detected ($totalRows rows). Mode: Chunking (PK: $primaryKey)");
         
         $fp = gzopen($gzFile, 'w9'); 
-        $currentVal = 0;
+        $lastId = 0;
         
-        while ($currentVal <= $maxVal) {
-            $query = "SELECT * FROM `$table` WHERE `$primaryKey` > $currentVal AND `$primaryKey` <= ($currentVal + $chunkSize)";
+        while ($lastId < $maxId) {
+            $query = "SELECT * FROM `$table` WHERE `$primaryKey` > $lastId ORDER BY `$primaryKey` ASC LIMIT $chunkSize";
             $result = $mysqli->query($query);
             
             if ($result && $result->num_rows > 0) {
@@ -264,11 +283,11 @@ foreach ($tables as $table) {
                         return ($val === null) ? "NULL" : "'" . $mysqli->real_escape_string($val) . "'";
                     }, array_values($row));
                     gzwrite($fp, "INSERT INTO `$table` VALUES (" . implode(",", $values) . ");\n");
+                    $lastId = $row[$primaryKey];
                 }
-                $currentVal += $chunkSize;
-                echo "Progress: $currentVal / $maxVal rows processed...\r";
+                echo "Progress: ID $lastId / $maxId processed...\r";
             } else {
-                $currentVal += $chunkSize;
+                break; // ডাটা না থাকলে লুপ শেষ
             }
         }
         gzclose($fp);

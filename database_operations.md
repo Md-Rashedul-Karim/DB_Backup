@@ -976,7 +976,7 @@ date -d tomorrow
 ```bash
 php /home/centos/bdg_b2mwap_delete_month_db_exports.php
 ```
-## দুই* মাস আগে ডাটা এক্সপোর্ট, ডিলিট সাথে ইমেইল পাঠানো। 
+## দুই* মাস আগে ডাটা এক্সপোর্ট, সাথে ইমেইল পাঠানো। 
 
 ```bash
 php /home/centos/bdgamers_month_db_exports.php
