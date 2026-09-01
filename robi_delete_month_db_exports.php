@@ -35,6 +35,7 @@ $database       = 'z_robi_sm_archive';
 $baseOutputDir  = '/home/centos/'; // শেষে স্ল্যাশ নিশ্চিত করুন
 
 $mysqldump      = '/usr/bin/mysqldump'; // বা পুরো পাথ দিন: /usr/bin/mysqldump
+// $mysqldump      = 'mysqldump'; // বা পুরো পাথ দিন: /usr/bin/mysqldump
 $gzipBin        = '/bin/gzip';
 
 
@@ -71,7 +72,13 @@ $emailCc = [
 
 // $tableSuffix = date("Y-m-d 23:59:59", strtotime("-1 days"));
 
-$tableSuffix = $database . '_' . date('Y_m', strtotime('-1 month'));
+// $targetMonthPattern = date('Y_m', strtotime('-1 month'));  // 1 month singular
+// $targetMonthPattern = date('Y_m', strtotime('-2 months'));  // 2++ months plural
+
+// $targetMonthPattern = date('Y_m', strtotime('first day of last month')); 
+
+$targetMonthPattern = date('Y_m');  // $targetMonthPattern = date('Y_m', strtotime('first day of this month'));
+$tableSuffix        = $database . '_' . $targetMonthPattern;
 
 echo "====================================================\n";
 echo "🚀 EXPORT + DELETE PROCESS STARTED\n";
@@ -210,8 +217,11 @@ try {
 // GET TARGET TABLES
 // ======================================================
 $tables = [];
-// টেবিল নাম চেক করার সময় ওয়াইল্ডকার্ড চেক করুন
-$searchPattern = "%_" . $tableSuffix;
+
+// ✅ FIX: added '%' before and after the pattern so it catches tables like 'table_name_2026_06'
+// $searchPattern = '%' . date('Y_m', strtotime('-1 month')) . '%'; 
+    $searchPattern = '%' . $targetMonthPattern . '%';
+
 $result = $mysqli->query("SHOW TABLES LIKE " . "'" . $mysqli->real_escape_string($searchPattern) . "'");
 
 while ($row = $result->fetch_array()) {
